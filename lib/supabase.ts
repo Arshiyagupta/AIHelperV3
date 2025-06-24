@@ -26,30 +26,15 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-// Helper function to generate invite codes
-export const generateInviteCode = (): string => {
-  const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
-  const prefix = 'SAFE-'
-  let code = ''
-  for (let i = 0; i < 5; i++) {
-    code += chars.charAt(Math.floor(Math.random() * chars.length))
-  }
-  return prefix + code
-}
-
 // Auth helper functions
 export const signUp = async (email: string, password: string, fullName: string) => {
   try {
-    // Generate invite code before creating the user
-    const inviteCode = generateInviteCode()
-
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
-          invite_code: inviteCode,
         },
       },
     })
@@ -57,8 +42,8 @@ export const signUp = async (email: string, password: string, fullName: string) 
     if (authError) throw authError
 
     if (authData.user) {
-      // Return the generated invite code directly
-      return { user: authData.user, inviteCode: inviteCode }
+      // Return user data without invite code - it will be generated later
+      return { user: authData.user, inviteCode: null }
     }
 
     throw new Error('User creation failed')

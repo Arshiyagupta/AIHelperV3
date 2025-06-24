@@ -26,10 +26,10 @@ export default function AuthScreen() {
           return;
         }
         
-        const { inviteCode } = await signUp(email, password, name);
+        await signUp(email, password, name);
         Alert.alert(
           'Welcome to SafeTalk! 🎉', 
-          `Your invite code is: ${inviteCode}\n\nShare this with your partner so they can connect with you.`,
+          'Your account has been created successfully. You can generate your invite code from your profile to connect with your partner.',
           [{ text: 'Continue', onPress: () => router.push('/(tabs)') }]
         );
       } else {

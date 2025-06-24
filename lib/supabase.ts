@@ -26,7 +26,7 @@ export const supabase = createClient<Database>(supabaseUrl, supabaseAnonKey, {
   },
 })
 
-// Helper function to generate invite codes (kept for reference, but not used in signup)
+// Helper function to generate invite codes
 export const generateInviteCode = (): string => {
   const chars = 'ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'
   const prefix = 'SAFE-'
@@ -40,12 +40,16 @@ export const generateInviteCode = (): string => {
 // Auth helper functions
 export const signUp = async (email: string, password: string, fullName: string) => {
   try {
+    // Generate invite code before creating the user
+    const inviteCode = generateInviteCode()
+
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email,
       password,
       options: {
         data: {
           full_name: fullName,
+          invite_code: inviteCode,
         },
       },
     })
@@ -53,23 +57,8 @@ export const signUp = async (email: string, password: string, fullName: string) 
     if (authError) throw authError
 
     if (authData.user) {
-      // Wait a moment for the trigger to complete
-      await new Promise(resolve => setTimeout(resolve, 1000))
-      
-      // Get the user profile to retrieve the generated invite code
-      const { data: profile, error: profileError } = await supabase
-        .from('users')
-        .select('invite_code')
-        .eq('id', authData.user.id)
-        .single()
-
-      if (profileError) {
-        console.error('Error fetching user profile:', profileError)
-        // Return a fallback response if we can't get the invite code
-        return { user: authData.user, inviteCode: 'SAFE-XXXXX' }
-      }
-
-      return { user: authData.user, inviteCode: profile.invite_code }
+      // Return the generated invite code directly
+      return { user: authData.user, inviteCode: inviteCode }
     }
 
     throw new Error('User creation failed')
